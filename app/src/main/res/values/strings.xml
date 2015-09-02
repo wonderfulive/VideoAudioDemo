@@ -6,4 +6,8 @@
     <string name="error_no_sdcard">没有SD卡，无法存储录音数据</string>
     <string name="error_state_record">正在录音中，请先停止录音</string>
     <string name="error_unknown">无法识别的错误</string>
+
+    <string name="txt_start">Start</string>
+    <string name="txt_finish">Finish Activity</string>
+    <string name="unable_to_get_file">Unable to get recorded video.</string>
 </resources>

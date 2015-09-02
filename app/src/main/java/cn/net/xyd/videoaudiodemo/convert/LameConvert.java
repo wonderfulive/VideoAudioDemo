@@ -8,7 +8,7 @@ import android.util.Log;
  */
 public class LameConvert {
 
-    interface OnProcessCallback{
+    public interface OnProcessCallback{
         void callback(int process);
     }
     private OnProcessCallback callback;

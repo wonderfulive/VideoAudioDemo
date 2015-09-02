@@ -54,20 +54,20 @@ void publishJavaProgress(JNIEnv * env, jobject obj, jint progress) {
   // 1.找到java的MainActivity的class
   jclass clazz = (*env)->FindClass(env, "cn/net/xyd/videoaudiodemo/convert/LameConvert");
   if (clazz == 0) {
-    LOGI("can't find clazz");
+    //LOGI("can't find clazz");
   }
-  LOGI(" find clazz");
+  //LOGI(" find clazz");
 
   //2 找到class 里面的方法定义
   jmethodID methodid = (*env)->GetMethodID(env, clazz, "setConvertProgress","(I)V");
   if (methodid == 0) {
-    LOGI("can't find methodid");
+    //LOGI("can't find methodid");
   }
-  LOGI(" find methodid");
+  //LOGI(" find methodid");
 
   //3 .调用方法
   (*env)->CallVoidMethod(env,obj, methodid, progress);
-  LOGI(" CallVoidMethod methodid");
+  //LOGI(" CallVoidMethod methodid");
   (*env)->DeleteLocalRef(env,clazz);
 }
 int flag = 0;
@@ -79,8 +79,8 @@ JNIEXPORT void JNICALL Java_cn_net_xyd_videoaudiodemo_convert_LameConvert_conver
   //把java的string类型的文件转化成c能识别的char 字符串
   char* cwav = Jstring2CStr(env,jwav);
   char* cmp3 = Jstring2CStr(env,jmp3);
-  LOGI("wav = %s",cwav);
-  LOGI("mp3 = %s",cmp3);
+  //LOGI("wav = %s",cwav);
+  //LOGI("mp3 = %s",cmp3);
   //1.打开 wav,MP3文件
   FILE* fwav = fopen(cwav,"rb");
   FILE* fmp3 = fopen(cmp3,"wb");
@@ -95,7 +95,7 @@ JNIEXPORT void JNICALL Java_cn_net_xyd_videoaudiodemo_convert_LameConvert_conver
   // 3. 设置MP3的编码方式
   lame_set_VBR(lame,vbr_default);
   lame_init_params(lame);
-  LOGI("lame init finish");
+  //LOGI("lame init finish");
   int read ; int write; //代表读了多少个次 和写了多少次
   int total=0; // 当前读的wav文件的byte数目
   do{
@@ -104,7 +104,7 @@ JNIEXPORT void JNICALL Java_cn_net_xyd_videoaudiodemo_convert_LameConvert_conver
     }
     read = fread(wav_buffer,sizeof(short int)*2, 8192,fwav);
     total +=  read* sizeof(short int)*2;
-    LOGI("converting ....%d", total);
+    //LOGI("converting ....%d", total);
     publishJavaProgress(env,cls,total);
     // 调用java代码 完成进度条的更新
     if(read!=0){
@@ -116,7 +116,7 @@ JNIEXPORT void JNICALL Java_cn_net_xyd_videoaudiodemo_convert_LameConvert_conver
       lame_encode_flush(lame,mp3_buffer,8192);
     }
   }while(read!=0);
-  LOGI("convert  finish");
+  //LOGI("convert  finish");
 
   lame_close(lame);
   fclose(fwav);

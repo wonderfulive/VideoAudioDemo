@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import cn.net.xyd.videoaudiodemo.audio.AudioFileFunc;
@@ -15,6 +16,7 @@ import cn.net.xyd.videoaudiodemo.audio.ErrorCode;
 import cn.net.xyd.videoaudiodemo.audio.MediaRecordFunc;
 
 /**
+ * 录制wav或amr格式
  * Created by Administrator on 2015/8/21 0021.
  */
 public class TestAudioActivity extends Activity{
@@ -25,7 +27,7 @@ public class TestAudioActivity extends Activity{
     private Button btn_record_amr;
     private Button btn_stop;
     private TextView txt;
-    private UIHandler uiHandler;
+    public UIHandler uiHandler;
     private UIThread uiThread;
 
     @Override
@@ -43,11 +45,19 @@ public class TestAudioActivity extends Activity{
         //getMenuInflater().inflate(R.menu.activity_main, menu);
         return true;
     }
+    private LinearLayout mVolumeLayout;
     private void findViewByIds(){
         btn_record_wav = (Button)this.findViewById(R.id.video_btn);
         btn_record_amr = (Button)this.findViewById(R.id.image_btn);
         btn_stop = (Button)this.findViewById(R.id.stop_btn);
         txt = (TextView)this.findViewById(R.id.text);
+
+        mVolumeLayout = (LinearLayout)this.findViewById(R.id.volume_show_id);
+        int[] location = new int[2];
+        mVolumeLayout.getLocationOnScreen(location);
+        volumeView = new VolumeView(this,location[1]+100);
+        mVolumeLayout.removeAllViews();
+        mVolumeLayout.addView(volumeView);
     }
     private void setListeners(){
         btn_record_wav.setOnClickListener(btn_record_wav_clickListener);
@@ -92,6 +102,7 @@ public class TestAudioActivity extends Activity{
             case FLAG_WAV:
                 AudioRecordFunc mRecord_1 = AudioRecordFunc.getInstance();
                 mResult = mRecord_1.startRecordAndFile();
+                mRecord_1.getVoice(this);
                 break;
             case FLAG_AMR:
                 MediaRecordFunc mRecord_2 = MediaRecordFunc.getInstance();
@@ -144,12 +155,13 @@ public class TestAudioActivity extends Activity{
     private final static int CMD_RECORDING_TIME = 2000;
     private final static int CMD_RECORDFAIL = 2001;
     private final static int CMD_STOP = 2002;
-    class UIHandler extends Handler{
+    public final static int CMD_VOICE_VOLUME = 2003;
+
+    public class UIHandler extends Handler{
         public UIHandler() {
         }
         @Override
         public void handleMessage(Message msg) {
-            // TODO Auto-generated method stub
             Log.d("MyHandler", "handleMessage......");
             super.handleMessage(msg);
             Bundle b = msg.getData();
@@ -180,11 +192,16 @@ public class TestAudioActivity extends Activity{
                             break;
                     }
                     break;
+                case CMD_VOICE_VOLUME:
+                    Log.e("db=",b.getInt("msg")+"");
+                    volumeView.changed(b.getInt("msg"));
+                    break;
                 default:
                     break;
             }
         }
     };
+    private VolumeView volumeView;
     class UIThread implements Runnable {
         int mTimeMill = 0;
         boolean vRun = true;
@@ -196,7 +213,6 @@ public class TestAudioActivity extends Activity{
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
                 mTimeMill ++;
