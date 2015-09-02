@@ -22,6 +22,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
+ * 调用android原生api录制视频
  * Created by Administrator on 2015/8/12 0012.
  */
 public class VideoActivity extends Activity {

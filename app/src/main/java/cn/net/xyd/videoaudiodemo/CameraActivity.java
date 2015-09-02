@@ -20,6 +20,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
+ * 拍照
  * Created by Administrator on 2015/8/11 0011.
  */
 public class CameraActivity extends Activity {

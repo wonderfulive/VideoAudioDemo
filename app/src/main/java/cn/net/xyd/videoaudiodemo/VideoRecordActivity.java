@@ -11,22 +11,21 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.PowerManager;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import org.w3c.dom.Text;
 
 import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
 /**
+ * 调用android原生api录制视频
  * Created by Administrator on 2015/8/12 0012.
  */
 public class VideoRecordActivity extends Activity implements
@@ -38,23 +37,31 @@ public class VideoRecordActivity extends Activity implements
     private SurfaceHolder mHolder;
     private MediaRecorder mMediaRecorder;
     private boolean isRecording = false;
-    private int recLen=0;
+    private int recLen = 0;
     private Timer timer = new Timer(true);
+    private TimerTask timerTask;
     private TextView recTime;
-    TimerTask task = new TimerTask(){
+    private PowerManager.WakeLock mWakeLock;
+    private final static String CLASS_LABEL = "VideoRecordActivity";
+
+    class MyTimerTask extends TimerTask {
+        @Override
         public void run() {
             Message message = new Message();
             message.what = 1;
             handler.sendMessage(message);
         }
-    };
+    }
+
     final Handler handler = new Handler() {
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case 1:
-                    recLen++;
-                    recTime.setText(recLen+"秒");
-                    if(recLen>=30){
+
+                    recTime.setText(++recLen + "秒");
+                    if (recLen >= 30) {
+                        if (timerTask != null)
+                            timerTask.cancel();
                         startRecord();
                     }
                     break;
@@ -62,15 +69,60 @@ public class VideoRecordActivity extends Activity implements
             super.handleMessage(msg);
         }
     };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.video_layout);
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        mWakeLock = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, CLASS_LABEL);
+        mWakeLock.acquire();
         initView();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (mWakeLock == null) {
+            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            mWakeLock = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, CLASS_LABEL);
+            mWakeLock.acquire();
+        }
+        recLen = 0;
+        recTime.setText(recLen + "秒");
+        videoRecord.setBackgroundResource(R.mipmap.video_record_icon);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        releaseMediaRecorder(); // if you are using MediaRecorder, release it
+        // first
+        releaseCamera(); // release the camera immediately on pause event
+        reset();
+    }
+
+    private void reset() {
+        if (timerTask != null)
+            timerTask.cancel();
+        isRecording = false;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mWakeLock != null) {
+            mWakeLock.release();
+            mWakeLock = null;
+        }
+        if (timer != null) {
+            timer.cancel();
+            timer = null;
+        }
+    }
+
     private void initView() {
-        recTime = (TextView)findViewById(R.id.time_text);
+        recTime = (TextView) findViewById(R.id.time_text);
         videoRecord = (Button) findViewById(R.id.button_capture);
         mSurfaceView = (SurfaceView) findViewById(R.id.camera_preview);
        /* if (checkCameraHardware(this)) {
@@ -99,7 +151,6 @@ public class VideoRecordActivity extends Activity implements
 
     private void initCameraParam() {
         if (mCamera != null) {
-            Log.e("==============>", "initCameraParam");
             Camera.Parameters parameters = mCamera.getParameters();
             parameters.setFlashMode(Camera.Parameters.FLASH_MODE_AUTO);
             parameters.setRotation(90);
@@ -107,7 +158,7 @@ public class VideoRecordActivity extends Activity implements
             //parameters.set("rotation", 360);
             mCamera.setParameters(parameters);
             // 设置surfaceview的方向
-            mCamera.setDisplayOrientation(90);
+            mCamera.setDisplayOrientation(0);
         }
     }
 
@@ -127,8 +178,8 @@ public class VideoRecordActivity extends Activity implements
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.button_capture:
-                videoRecord.setEnabled(false);
                 startRecord();
+                videoRecord.setBackgroundResource(R.mipmap.stop_record_icon);
                 break;
             default:
                 break;
@@ -138,8 +189,10 @@ public class VideoRecordActivity extends Activity implements
 
     private void startRecord() {
         if (isRecording) {
-            mMediaRecorder.setOnErrorListener(null);
-            mMediaRecorder.setPreviewDisplay(null);
+            if (mMediaRecorder != null) {
+                mMediaRecorder.setOnErrorListener(null);
+                mMediaRecorder.setPreviewDisplay(null);
+            }
             try {
                 // stop recording and release camera
                 mMediaRecorder.stop(); // stop the recording
@@ -151,9 +204,9 @@ public class VideoRecordActivity extends Activity implements
                 Log.w(TAG, "stopRecord", e);
             }
             releaseMediaRecorder(); // release the MediaRecorder object
-            mCamera.lock(); // take camera access back from MediaRecorder
 
             // inform the user that recording has stopped
+
             isRecording = false;
             videoRecord.setEnabled(true);
             Intent intent = new Intent();
@@ -170,12 +223,13 @@ public class VideoRecordActivity extends Activity implements
                         // Camera is available and unlocked, MediaRecorder is prepared,
                         // now you can start recording
                         mMediaRecorder.start();
-                        timer.schedule(task,1000,1000);
+                        if (timer == null)
+                            timer = new Timer(true);
+                        timer.schedule(timerTask = new MyTimerTask(), 1000, 1000);
                         // inform the user that recording has started
                         // setCaptureButtonText("Stop");
                         isRecording = true;
                     } else {
-                        Log.e("===============>", " error ");
                         // prepare didn't work, release the camera
                         releaseMediaRecorder();
                         // inform user
@@ -194,13 +248,12 @@ public class VideoRecordActivity extends Activity implements
     private String filePath = null;
 
     private boolean prepareVideoRecorder() {
-        Log.e("===============>", "prepareVideoRecorder");
         // mCamera = getCameraInstance();
         if (mMediaRecorder == null) {
             mMediaRecorder = new MediaRecorder();
         }
         // Step 1: Unlock and set camera to MediaRecorder
-        if(mCamera!=null) {
+        if (mCamera != null) {
             mCamera.unlock();
             mMediaRecorder.setCamera(mCamera);
         }
@@ -250,20 +303,13 @@ public class VideoRecordActivity extends Activity implements
         return true;
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        releaseMediaRecorder(); // if you are using MediaRecorder, release it
-        // first
-        releaseCamera(); // release the camera immediately on pause event
-    }
 
     private void releaseMediaRecorder() {
         if (mMediaRecorder != null) {
             mMediaRecorder.reset(); // clear recorder configuration
             mMediaRecorder.release(); // release the recorder object
             mMediaRecorder = null;
-            if(mCamera!=null) {
+            if (mCamera != null) {
                 mCamera.lock(); // lock camera for later use
             }
         }
@@ -294,7 +340,6 @@ public class VideoRecordActivity extends Activity implements
             mCamera.startPreview();
         } catch (IOException e) {
             mCamera.release();
-            Log.d(TAG, "Error setting camera preview: " + e.getMessage());
         } catch (Exception e) {
             mCamera.release();
         }
