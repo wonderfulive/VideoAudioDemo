@@ -24,6 +24,9 @@ import com.javacv.recorder.FFmpegRecorderActivity;
 
 import cn.net.xyd.videoaudiodemo.R;
 
+/**
+ * 使用Javacv和ffmpeg录制视频
+ */
 public class MainActivity extends Activity implements OnClickListener {
 	Button btnStart;
 	public static boolean IS_CUSTOM_CAMERA_ENABLED = true;

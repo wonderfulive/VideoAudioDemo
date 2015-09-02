@@ -16,7 +16,7 @@ import cn.net.xyd.videoaudiodemo.audio.ErrorCode;
 import cn.net.xyd.videoaudiodemo.audio.MediaRecordFunc;
 
 /**
- * 录制wav或amr格式
+ * 使用audiorecorder录制wav或amr格式
  * Created by Administrator on 2015/8/21 0021.
  */
 public class TestAudioActivity extends Activity{

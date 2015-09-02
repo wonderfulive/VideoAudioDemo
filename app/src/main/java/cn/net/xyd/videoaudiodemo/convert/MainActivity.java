@@ -19,6 +19,7 @@ import java.io.IOException;
 import cn.net.xyd.videoaudiodemo.R;
 
 /**
+ * 使用LAME将录制的wav转成MP3，存储空间只有wav的1/10
  * Created by Administrator on 2015/8/27 0027.
  */
 public class MainActivity extends Activity implements LameConvert.OnProcessCallback{

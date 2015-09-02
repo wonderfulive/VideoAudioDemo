@@ -29,6 +29,7 @@ import cn.net.xyd.videoaudiodemo.Utils;
 import cn.net.xyd.videoaudiodemo.VolumeView;
 
 /**
+ * 使用LAME直接录制音频
  * Created by Administrator on 2015/8/12 0012.
  */
 public class MyAudioRecordActivity extends Activity {

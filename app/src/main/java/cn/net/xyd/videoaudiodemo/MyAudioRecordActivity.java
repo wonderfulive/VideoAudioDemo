@@ -24,6 +24,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 /**
+ * 使用MediaRecorder录制mp3
  * Created by Administrator on 2015/8/12 0012.
  */
 public class MyAudioRecordActivity extends Activity {

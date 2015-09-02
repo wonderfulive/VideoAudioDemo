@@ -28,6 +28,7 @@ import cn.net.xyd.videoaudiodemo.VolumeView;
 import cn.net.xyd.videoaudiodemo.convert.LameConvert;
 
 /**
+ * 使用LAME直接录制音频
  * Created by Administrator on 2015/8/12 0012.
  */
 public class AudioRecordActivity extends Activity implements LameConvert.OnProcessCallback{
