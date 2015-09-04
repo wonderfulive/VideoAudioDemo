@@ -15,6 +15,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private SurfaceHolder mHolder;
     private Camera mCamera;
     private static final String TAG = "CameraPreview";
+
     public CameraPreview(Context context, Camera camera) {
         super(context);
         mCamera = camera;
@@ -26,7 +27,25 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
     }
 
+    private void initCameraParam() {
+        if (mCamera != null) {
+            Camera.Parameters parameters = mCamera.getParameters();
+            parameters.setFlashMode(Camera.Parameters.FLASH_MODE_AUTO);
+            parameters.setRotation(90);
+            // 设置保存的方向
+            //parameters.set("rotation", 360);
+            mCamera.setParameters(parameters);
+            // 设置surfaceview的方向
+            mCamera.setDisplayOrientation(90);
+        }
+    }
+
     public void surfaceCreated(SurfaceHolder holder) {
+        mHolder = holder;
+        if (mCamera == null)
+            mCamera = Utils.getCameraInstance();
+        initCameraParam();
+
         // The Surface has been created, now tell the camera where to draw the preview.
         try {
             mCamera.setPreviewDisplay(holder);
@@ -38,6 +57,11 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     public void surfaceDestroyed(SurfaceHolder holder) {
         // empty. Take care of releasing the Camera preview in your activity.
+        if (mCamera != null) {
+            mCamera.stopPreview();
+            mCamera.release();
+            mCamera = null;
+        }
     }
 
     public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
